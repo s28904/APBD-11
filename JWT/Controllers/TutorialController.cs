@@ -5,6 +5,7 @@ using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Cryptography;
 using System.Text;
+using JWT.RequestModels;
 
 /*
  * TODO w pracy domowej
@@ -44,7 +45,7 @@ namespace JWT.Controllers
         public IActionResult Login(LoginRequestModel model) 
         {
 
-            if(!(model.UserName.ToLower() == "kacper" && model.Password == "hello-world"))
+            if(!(model.Username.ToLower() == "kacper" && model.UserPassword == "hello-world"))
             {
                 return Unauthorized("Wrong username or password");
             }
@@ -142,10 +143,10 @@ namespace JWT.Controllers
         }
     }
 
-    public class RefreshTokenRequestModel
-    {
-        public string RefreshToken { get; set; } = null!;
-    }
+    // public class RefreshTokenRequestModel
+    // {
+    //     public string RefreshToken { get; set; } = null!;
+    // }
 
     public class VerifyPasswordRequestModel
     {
@@ -153,13 +154,13 @@ namespace JWT.Controllers
         public string Hash { get; set; } = null!;
     }
     
-    public class LoginRequestModel
-    {
-        [Required]
-        public string UserName { get; set; } = null!;
-        [Required]
-        public string Password { get; set; } = null!;
-    }
+    // public class LoginRequestModel
+    // {
+    //     [Required]
+    //     public string UserName { get; set; } = null!;
+    //     [Required]
+    //     public string Password { get; set; } = null!;
+    // }
 
     public class LoginResponseModel
     {

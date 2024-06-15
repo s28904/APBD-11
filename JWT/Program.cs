@@ -4,12 +4,17 @@ using Microsoft.IdentityModel.Tokens;
 using System.Diagnostics;
 using System.Reflection.PortableExecutable;
 using System.Text;
+using JWT.Contexts;
+using JWT.Services;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
+builder.Services.AddDbContext<DatabaseContext>(opt =>
+    opt.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
+builder.Services.AddScoped<IUserService, UserService>();
 // === Dodaj serwis odpowiedzialny za autoryzacje tokenu
 builder.Services.AddAuthentication().AddJwtBearer(opt =>
 {
