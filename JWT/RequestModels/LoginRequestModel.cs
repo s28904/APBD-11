@@ -4,6 +4,11 @@ namespace JWT.RequestModels;
 
 public class LoginRequestModel
 {
-    [MaxLength(100)] public string Username { get; set; } = null!;
+    [MaxLength(100)]
+    [MinLength(4)]
+    [Required]
+    public string Username { get; set; } = null!;
+    
+    [Required]
     public string UserPassword { get; set; } = null!;
 }
