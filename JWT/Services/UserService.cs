@@ -158,7 +158,7 @@ public class UserService(DatabaseContext context) : IUserService
                 Audience = configuration["JWT:RefAudience"],
                 Expires = DateTime.UtcNow.AddDays(3),
                 SigningCredentials = new SigningCredentials(
-                    new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:Key"]!)),
+                    new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:RefKey"]!)),
                     SecurityAlgorithms.HmacSha256),
                 Subject = new ClaimsIdentity(new List<Claim>
                 {
