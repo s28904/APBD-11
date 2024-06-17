@@ -38,42 +38,9 @@ public class UserService(DatabaseContext context) : IUserService
             throw new InvalidUserLoginDataException("Login or password is invalid");
         }
         
+        var stringToken = CreateJwtToken(configuration, requestModel.Username);
+        var stringRefToken = CreateJwtRefreshToken(configuration, requestModel.Username);
         
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var tokenDescription = new SecurityTokenDescriptor
-        {
-            Issuer = configuration["JWT:Issuer"],
-            Audience = configuration["JWT:Audience"],
-            Expires = DateTime.UtcNow.AddMinutes(15),
-            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:Key"]!)),
-                SecurityAlgorithms.HmacSha256),
-            Subject = new ClaimsIdentity(new List<Claim>
-            {
-                new Claim("username", requestModel.Username)
-            })
-        };
-        
-        var token = tokenHandler.CreateToken(tokenDescription);
-
-        var stringToken = tokenHandler.WriteToken(token);
-        
-        var refTokenDescription = new SecurityTokenDescriptor
-        {
-            Issuer = configuration["JWT:RefIssuer"],
-            Audience = configuration["JWT:RefAudience"],
-            Expires = DateTime.UtcNow.AddDays(3),
-            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:RefKey"]!)),
-                SecurityAlgorithms.HmacSha256),
-            Subject = new ClaimsIdentity(new List<Claim>
-            {
-                new Claim("username", requestModel.Username)
-            })
-        };
-
-        var refToken = tokenHandler.CreateToken(refTokenDescription);
-        var stringRefToken = tokenHandler.WriteToken(refToken);
-
-
         return new LoginResponseModel()
         {
             Token = stringToken,
@@ -131,44 +98,16 @@ public class UserService(DatabaseContext context) : IUserService
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:RefKey"]!))
             }, out SecurityToken validatedToken);
 
+            
             var oldRefreshToken = tokenHandler.ReadJwtToken(requestModel.RefreshToken);
-            var tokenDescription = new SecurityTokenDescriptor
-            {
-                Issuer = configuration["JWT:Issuer"],
-                Audience = configuration["JWT:Audience"],
-                Expires = DateTime.UtcNow.AddMinutes(15),
-                SigningCredentials = new SigningCredentials(
-                    new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:Key"]!)),
-                    SecurityAlgorithms.HmacSha256),
-                Subject = new ClaimsIdentity(new List<Claim>
-                {
-                    new Claim("username", oldRefreshToken.Claims.First(c =>c.Type == "username").Value)
-                })
-                    
-                
-            };
-
-            var token = tokenHandler.CreateToken(tokenDescription);
-
-            var stringToken = tokenHandler.WriteToken(token);
-
-            var refTokenDescription = new SecurityTokenDescriptor
-            {
-                Issuer = configuration["JWT:RefIssuer"],
-                Audience = configuration["JWT:RefAudience"],
-                Expires = DateTime.UtcNow.AddDays(3),
-                SigningCredentials = new SigningCredentials(
-                    new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:RefKey"]!)),
-                    SecurityAlgorithms.HmacSha256),
-                Subject = new ClaimsIdentity(new List<Claim>
-                {
-                    new Claim("username", oldRefreshToken.Claims.First(c =>c.Type == "username").Value)
-                })
-            };
-
-            var refToken = tokenHandler.CreateToken(refTokenDescription);
-            var stringRefToken = tokenHandler.WriteToken(refToken);
-
+            
+            var stringToken =
+                CreateJwtToken(configuration, oldRefreshToken.Claims.First(c => c.Type == "username").Value);
+            
+            var stringRefToken = CreateJwtRefreshToken(configuration,oldRefreshToken.Claims.First(c =>c.Type == "username").Value);
+            
+            
+            
             return new RefreshTokenResponseModel()
             {
                 Token = stringToken,
@@ -182,4 +121,43 @@ public class UserService(DatabaseContext context) : IUserService
         }
     }
 
+    private string CreateJwtToken(IConfiguration configuration, string username)
+    {
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var tokenDescription = new SecurityTokenDescriptor
+        {
+            Issuer = configuration["JWT:Issuer"],
+            Audience = configuration["JWT:Audience"],
+            Expires = DateTime.UtcNow.AddMinutes(15),
+            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:Key"]!)),
+                SecurityAlgorithms.HmacSha256),
+            Subject = new ClaimsIdentity(new List<Claim>
+            {
+                new Claim("username", username)
+            })
+        };
+        
+        var token = tokenHandler.CreateToken(tokenDescription);
+        return tokenHandler.WriteToken(token);
+    }
+
+    private string CreateJwtRefreshToken(IConfiguration configuration, string username)
+    {
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var refTokenDescription = new SecurityTokenDescriptor
+        {
+            Issuer = configuration["JWT:RefIssuer"],
+            Audience = configuration["JWT:RefAudience"],
+            Expires = DateTime.UtcNow.AddDays(3),
+            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:RefKey"]!)),
+                SecurityAlgorithms.HmacSha256),
+            Subject = new ClaimsIdentity(new List<Claim>
+            {
+                new Claim("username", username)
+            })
+        };
+
+        var refToken = tokenHandler.CreateToken(refTokenDescription);
+        return tokenHandler.WriteToken(refToken);
+    }
 }
