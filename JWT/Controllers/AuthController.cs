@@ -38,7 +38,14 @@ public class AuthController(IConfiguration configuration, IUserService service) 
         }
         catch (Exception e)
         {
-            return BadRequest(e.Message);
+            if (e is UserNameTakenException or InvalidUserNameException)
+            {
+                return BadRequest(e.Message);
+            }
+            else
+            {
+                return StatusCode(500, e.Message);
+            }
         }
     }
     
